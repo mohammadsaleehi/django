@@ -182,6 +182,8 @@ class BaseExpression:
     allowed_default = False
     # Can the expression be used during a constraint validation?
     constraint_validation_compatible = True
+    # Does the expression possibly return more than one row?
+    set_returning = False
 
     def __init__(self, output_field=None):
         if output_field is not None:
@@ -1330,13 +1332,21 @@ class Col(Expression):
 class ColPairs(Expression):
     def __init__(self, alias, targets, sources, output_field):
         super().__init__(output_field=output_field)
-        self.alias, self.targets, self.sources = alias, targets, sources
+        self.alias = alias
+        self.targets = targets
+        self.sources = sources
 
     def __len__(self):
         return len(self.targets)
 
     def __iter__(self):
         return iter(self.get_cols())
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}({self.alias!r}, {self.targets!r}, "
+            f"{self.sources!r}, {self.output_field!r})"
+        )
 
     def get_cols(self):
         return [
@@ -1423,15 +1433,13 @@ class ExpressionList(Func):
 
     template = "%(expressions)s"
 
-    def __init__(self, *expressions, **extra):
-        if not expressions:
-            raise ValueError(
-                "%s requires at least one expression." % self.__class__.__name__
-            )
-        super().__init__(*expressions, **extra)
-
     def __str__(self):
         return self.arg_joiner.join(str(arg) for arg in self.source_expressions)
+
+    def as_sql(self, *args, **kwargs):
+        if not self.source_expressions:
+            return "", ()
+        return super().as_sql(*args, **kwargs)
 
     def as_sqlite(self, compiler, connection, **extra_context):
         # Casting to numeric is unnecessary.
