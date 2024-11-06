@@ -63,6 +63,7 @@ from django.utils.safestring import SafeData, SafeString, mark_safe
 from django.utils.text import get_text_list, smart_split, unescape_string_literal
 from django.utils.timezone import template_localtime
 from django.utils.translation import gettext_lazy, pgettext_lazy
+from django.http.multipartparser import TooManyFieldsSent
 
 from .exceptions import TemplateSyntaxError
 
@@ -898,7 +899,10 @@ class Variable:
                             type(current), bit
                         ):
                             raise AttributeError
-                        current = getattr(current, bit)
+                        try:
+                            current = getattr(current, bit)
+                        except TooManyFieldsSent:
+                            current = context.template.engine.string_if_invalid
                     except (TypeError, AttributeError):
                         # Reraise if the exception was raised by a @property
                         if not isinstance(current, BaseContext) and bit in dir(current):
