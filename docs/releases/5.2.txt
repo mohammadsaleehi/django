@@ -44,7 +44,10 @@ Minor features
 :mod:`django.contrib.admindocs`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ...
+* Links to components in docstrings now supports custom link text, using the
+  format ``:role:`link text <link>```. See :ref:`documentation helpers
+  <admindocs-helpers>` for more details.
+ 
 
 :mod:`django.contrib.auth`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,6 +85,10 @@ Minor features
   improves performance. See :ref:`adding an async interface
   <writing-authentication-backends-async-interface>` for more details.
 
+* The :ref:`password validator classes <included-password-validators>`
+  now have a new method ``get_error_message()``, which can be overridden in
+  subclasses to customize the error messages.
+
 :mod:`django.contrib.contenttypes`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -90,7 +97,19 @@ Minor features
 :mod:`django.contrib.gis`
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ...
+* GDAL now supports curved geometries ``CurvePolygon``, ``CompoundCurve``,
+  ``CircularString``, ``MultiSurface``, and ``MultiCurve`` via the new
+  :attr:`.OGRGeometry.has_curve` property, and the
+  :meth:`.OGRGeometry.get_linear_geometry` and
+  :meth:`.OGRGeometry.get_curve_geometry` methods.
+
+* :lookup:`coveredby` and :lookup:`covers` lookup are now supported on MySQL.
+
+* :lookup:`coveredby` and :lookup:`isvalid` lookups,
+  :class:`~django.contrib.gis.db.models.Collect` aggregation, and
+  :class:`~django.contrib.gis.db.models.functions.GeoHash` and
+  :class:`~django.contrib.gis.db.models.functions.IsValid` database functions
+  are now supported on MariaDB 11.7+.
 
 :mod:`django.contrib.messages`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -230,6 +249,10 @@ Management Commands
   setting the :envvar:`HIDE_PRODUCTION_WARNING` environment variable to
   ``"true"``.
 
+* The :djadmin:`makemigrations` and :djadmin:`migrate` commands  have a new
+  ``Command.autodetector`` attribute for subclasses to override in order to use
+  a custom autodetector class.
+
 Migrations
 ~~~~~~~~~~
 
@@ -257,8 +280,14 @@ Models
   longer required to be set on SQLite, which supports unlimited ``VARCHAR``
   columns.
 
+* :meth:`.QuerySet.explain` now supports the ``memory`` and ``serialize``
+  options on PostgreSQL 17+.
+
 Requests and Responses
 ~~~~~~~~~~~~~~~~~~~~~~
+
+* The new :attr:`.HttpResponse.text` property provides the string representation
+  of :attr:`.HttpResponse.content`.
 
 * The new :meth:`.HttpRequest.get_preferred_type` method can be used to query
   the preferred media type the client accepts.
@@ -365,6 +394,22 @@ Miscellaneous
 
 * The :func:`~django.template.context_processors.debug` context processor is no
   longer included in the default project template.
+
+* The following methods now have ``alters_data=True`` set to prevent side
+  effects when :ref:`rendering a template context <alters-data-description>`:
+
+  * :meth:`.UserManager.create_user`
+  * :meth:`.UserManager.acreate_user`
+  * :meth:`.UserManager.create_superuser`
+  * :meth:`.UserManager.acreate_superuser`
+  * :meth:`.QuerySet.create`
+  * :meth:`.QuerySet.acreate`
+  * :meth:`.QuerySet.bulk_create`
+  * :meth:`.QuerySet.abulk_create`
+  * :meth:`.QuerySet.get_or_create`
+  * :meth:`.QuerySet.aget_or_create`
+  * :meth:`.QuerySet.update_or_create`
+  * :meth:`.QuerySet.aupdate_or_create`
 
 .. _deprecated-features-5.2:
 

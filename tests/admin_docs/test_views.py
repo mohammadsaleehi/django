@@ -89,6 +89,18 @@ class AdminDocViewTests(TestDataMixin, AdminDocsTestCase):
         # View docstring
         self.assertContains(response, "Base view for admindocs views.")
 
+    def testview_docstring_links(self):
+        summary = (
+            '<h2 class="subhead">This is a view for '
+            '<a class="reference external" href="/admindocs/models/myapp.company/">'
+            "myapp.Company</a></h2>"
+        )
+        url = reverse(
+            "django-admindocs-views-detail", args=["admin_docs.views.CompanyView"]
+        )
+        response = self.client.get(url)
+        self.assertContains(response, summary, html=True)
+
     @override_settings(ROOT_URLCONF="admin_docs.namespace_urls")
     def test_namespaced_view_detail(self):
         url = reverse(
@@ -408,9 +420,9 @@ class TestModelDetailView(TestDataMixin, AdminDocsTestCase):
 
     def test_model_docstring_renders_correctly(self):
         summary = (
-            '<h2 class="subhead"><p>Stores information about a person, related to '
+            '<h2 class="subhead">Stores information about a person, related to '
             '<a class="reference external" href="/admindocs/models/myapp.company/">'
-            "myapp.Company</a>.</p></h2>"
+            "myapp.Company</a>.</h2>"
         )
         subheading = "<p><strong>Notes</strong></p>"
         body = (
@@ -428,6 +440,25 @@ class TestModelDetailView(TestDataMixin, AdminDocsTestCase):
         self.assertContains(self.response, subheading, html=True)
         self.assertContains(self.response, body, html=True)
         self.assertContains(self.response, model_body, html=True)
+
+    def test_model_docstring_built_in_tag_links(self):
+        summary = "Links with different link text."
+        body = (
+            '<p>This is a line with tag <a class="reference external" '
+            'href="/admindocs/tags/#built_in-extends">extends</a>\n'
+            'This is a line with model <a class="reference external" '
+            'href="/admindocs/models/myapp.family/">Family</a>\n'
+            'This is a line with view <a class="reference external" '
+            'href="/admindocs/views/myapp.views.Index/">Index</a>\n'
+            'This is a line with template <a class="reference external" '
+            'href="/admindocs/templates/Index.html/">index template</a>\n'
+            'This is a line with filter <a class="reference external" '
+            'href="/admindocs/filters/#filtername">example filter</a></p>'
+        )
+        url = reverse("django-admindocs-models-detail", args=["admin_docs", "family"])
+        response = self.client.get(url)
+        self.assertContains(response, summary, html=True)
+        self.assertContains(response, body, html=True)
 
     def test_model_detail_title(self):
         self.assertContains(self.response, "<h1>admin_docs.Person</h1>", html=True)
