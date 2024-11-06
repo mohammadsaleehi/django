@@ -55,6 +55,7 @@ import logging
 import re
 from enum import Enum
 
+from django.http.multipartparser import TooManyFieldsSent
 from django.template.context import BaseContext
 from django.utils.formats import localize
 from django.utils.html import conditional_escape, escape
@@ -898,7 +899,10 @@ class Variable:
                             type(current), bit
                         ):
                             raise AttributeError
-                        current = getattr(current, bit)
+                        try:
+                            current = getattr(current, bit)
+                        except TooManyFieldsSent:
+                            current = context.template.engine.string_if_invalid
                     except (TypeError, AttributeError):
                         # Reraise if the exception was raised by a @property
                         if not isinstance(current, BaseContext) and bit in dir(current):

@@ -470,6 +470,21 @@ class DebugViewTests(SimpleTestCase):
             response = self.client.get("/raises500/", headers={"accept": "text/plain"})
         self.assertContains(response, "Oh dear, an error occurred!", status_code=500)
 
+    @override_settings(DATA_UPLOAD_MAX_NUMBER_FIELDS=1)
+    def test_max_number_of_fields_exceeded(self):
+        with self.assertLogs("django.security", level="WARNING") as log:
+            response = self.client.get("", query_params={"a": [1, 2]})
+        # Check that the response is a 400 error
+        self.assertEqual(response.status_code, 400)
+        # Check for the specific error message in the response content
+        self.assertIn(
+            "The number of GET/POST parameters exceeded settings."
+            "DATA_UPLOAD_MAX_NUMBER_FIELDS.",
+            response.content.decode("utf-8"),
+        )
+        # Check that a security warning log has been generated
+        self.assertTrue(any("django.security" in entry for entry in log.output))
+
 
 class DebugViewQueriesAllowedTests(SimpleTestCase):
     # May need a query to initialize MySQL connection
