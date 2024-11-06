@@ -6,7 +6,6 @@ import sys
 import types
 import warnings
 from pathlib import Path
-from urllib.parse import parse_qs
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseNotFound
@@ -406,11 +405,7 @@ class ExceptionReporter:
             "postmortem": self.postmortem,
         }
         if self.request is not None:
-            # Parse QUERY_STRING from META to key-value pairs like GET.items()
-            query_string = self.request.META.get("QUERY_STRING", "")
-            parsed_query_items = parse_qs(query_string)
-            # Convert parsed_query_items to the same format as GET.items()
-            c["request_GET_items"] = [(k, v[-1]) for k, v in parsed_query_items.items()]
+            c["request_GET_items"] = self.request.GET.items()
             c["request_FILES_items"] = self.request.FILES.items()
             c["request_insecure_uri"] = self._get_raw_insecure_uri()
             c["raising_view_name"] = get_caller(self.request)
